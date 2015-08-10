@@ -93,7 +93,7 @@ namespace Battery_charger_tester_gui
                 case RX_INSTRUCTION_EOF:
                     break;
                 default:
-                    throw new Exception("Invalid Instruction for RxPacket.");
+                    throw new Exception("Invalid Instruction "+instruction.ToString("x")+" for RxPacket.\r");
             }
         }
 

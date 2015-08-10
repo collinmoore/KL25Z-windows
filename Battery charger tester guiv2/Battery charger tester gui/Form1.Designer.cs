@@ -65,13 +65,6 @@
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.groupBox11 = new System.Windows.Forms.GroupBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.groupBox12 = new System.Windows.Forms.GroupBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.groupBox13 = new System.Windows.Forms.GroupBox();
-            this.label12 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox9.SuspendLayout();
             this.groupBox10.SuspendLayout();
@@ -87,9 +80,6 @@
             this.groupBox6.SuspendLayout();
             this.groupBox7.SuspendLayout();
             this.groupBox8.SuspendLayout();
-            this.groupBox11.SuspendLayout();
-            this.groupBox12.SuspendLayout();
-            this.groupBox13.SuspendLayout();
             this.SuspendLayout();
             // 
             // connectButton
@@ -107,10 +97,10 @@
             // 
             this.groupBox1.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.groupBox1.Controls.Add(this.connectButton);
-            this.groupBox1.ForeColor = System.Drawing.SystemColors.Control;
-            this.groupBox1.Location = new System.Drawing.Point(1, 2);
+            this.groupBox1.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(138, 53);
+            this.groupBox1.Size = new System.Drawing.Size(138, 54);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Serial connection";
@@ -118,9 +108,9 @@
             // clearRichTextBox
             // 
             this.clearRichTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.clearRichTextBox.Location = new System.Drawing.Point(11, 192);
+            this.clearRichTextBox.Location = new System.Drawing.Point(6, 21);
             this.clearRichTextBox.Name = "clearRichTextBox";
-            this.clearRichTextBox.Size = new System.Drawing.Size(116, 23);
+            this.clearRichTextBox.Size = new System.Drawing.Size(126, 23);
             this.clearRichTextBox.TabIndex = 3;
             this.clearRichTextBox.Text = "Clear text";
             this.clearRichTextBox.UseVisualStyleBackColor = true;
@@ -130,9 +120,9 @@
             // 
             this.richTextBox1.BackColor = System.Drawing.SystemColors.InfoText;
             this.richTextBox1.ForeColor = System.Drawing.SystemColors.ScrollBar;
-            this.richTextBox1.Location = new System.Drawing.Point(1, 235);
+            this.richTextBox1.Location = new System.Drawing.Point(1, 83);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(491, 423);
+            this.richTextBox1.Size = new System.Drawing.Size(491, 575);
             this.richTextBox1.TabIndex = 4;
             this.richTextBox1.Text = "";
             // 
@@ -160,12 +150,12 @@
             // groupBox10
             // 
             this.groupBox10.Controls.Add(this.refreshData);
-            this.groupBox10.Location = new System.Drawing.Point(575, 527);
+            this.groupBox10.Location = new System.Drawing.Point(329, 12);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(163, 58);
+            this.groupBox10.Size = new System.Drawing.Size(163, 54);
             this.groupBox10.TabIndex = 11;
             this.groupBox10.TabStop = false;
-            this.groupBox10.Text = "Refresh data";
+            this.groupBox10.Text = "Displays";
             // 
             // refreshData
             // 
@@ -191,7 +181,7 @@
             // 
             this.groupBox17.Controls.Add(this.wipeLogs);
             this.groupBox17.Controls.Add(this.startLogging);
-            this.groupBox17.Location = new System.Drawing.Point(353, 119);
+            this.groupBox17.Location = new System.Drawing.Point(824, 491);
             this.groupBox17.Name = "groupBox17";
             this.groupBox17.Size = new System.Drawing.Size(133, 98);
             this.groupBox17.TabIndex = 14;
@@ -234,7 +224,7 @@
             this.groupBox22.BackColor = System.Drawing.Color.DarkGreen;
             this.groupBox22.Controls.Add(this.disableTimeout);
             this.groupBox22.Controls.Add(this.enableTimeout);
-            this.groupBox22.Location = new System.Drawing.Point(11, 68);
+            this.groupBox22.Location = new System.Drawing.Point(1000, 491);
             this.groupBox22.Name = "groupBox22";
             this.groupBox22.Size = new System.Drawing.Size(117, 98);
             this.groupBox22.TabIndex = 9;
@@ -266,9 +256,9 @@
             // 
             this.groupBox23.Controls.Add(this.label13);
             this.groupBox23.Controls.Add(this.dutyCycleDropDown);
-            this.groupBox23.Location = new System.Drawing.Point(145, 2);
+            this.groupBox23.Location = new System.Drawing.Point(597, 333);
             this.groupBox23.Name = "groupBox23";
-            this.groupBox23.Size = new System.Drawing.Size(202, 104);
+            this.groupBox23.Size = new System.Drawing.Size(202, 119);
             this.groupBox23.TabIndex = 9;
             this.groupBox23.TabStop = false;
             this.groupBox23.Text = "Load circuit duty cycle";
@@ -359,18 +349,18 @@
             // 
             // groupBox4
             // 
-            this.groupBox4.Location = new System.Drawing.Point(512, 354);
+            this.groupBox4.Location = new System.Drawing.Point(824, 333);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(293, 119);
             this.groupBox4.TabIndex = 11;
             this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Has there been a fault";
+            this.groupBox4.Text = "This box intentionally left blank";
             // 
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.label14);
             this.groupBox5.Controls.Add(this.comboBox3);
-            this.groupBox5.Location = new System.Drawing.Point(145, 119);
+            this.groupBox5.Location = new System.Drawing.Point(603, 491);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(202, 98);
             this.groupBox5.TabIndex = 10;
@@ -463,87 +453,15 @@
             // 
             // groupBox8
             // 
-            this.groupBox8.Controls.Add(this.label9);
-            this.groupBox8.Location = new System.Drawing.Point(824, 344);
+            this.groupBox8.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.groupBox8.Controls.Add(this.clearRichTextBox);
+            this.groupBox8.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.groupBox8.Location = new System.Drawing.Point(174, 12);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(293, 54);
-            this.groupBox8.TabIndex = 14;
+            this.groupBox8.Size = new System.Drawing.Size(138, 54);
+            this.groupBox8.TabIndex = 4;
             this.groupBox8.TabStop = false;
-            this.groupBox8.Text = "Channel 9: Not used";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(6, 18);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(40, 25);
-            this.label9.TabIndex = 3;
-            this.label9.Text = "NA";
-            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // groupBox11
-            // 
-            this.groupBox11.Controls.Add(this.label10);
-            this.groupBox11.Location = new System.Drawing.Point(824, 419);
-            this.groupBox11.Name = "groupBox11";
-            this.groupBox11.Size = new System.Drawing.Size(293, 54);
-            this.groupBox11.TabIndex = 15;
-            this.groupBox11.TabStop = false;
-            this.groupBox11.Text = "Channel 10: Not used";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(6, 18);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(40, 25);
-            this.label10.TabIndex = 3;
-            this.label10.Text = "NA";
-            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // groupBox12
-            // 
-            this.groupBox12.Controls.Add(this.label11);
-            this.groupBox12.Location = new System.Drawing.Point(824, 492);
-            this.groupBox12.Name = "groupBox12";
-            this.groupBox12.Size = new System.Drawing.Size(293, 54);
-            this.groupBox12.TabIndex = 16;
-            this.groupBox12.TabStop = false;
-            this.groupBox12.Text = "Channel 11: Not used";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(6, 18);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(40, 25);
-            this.label11.TabIndex = 3;
-            this.label11.Text = "NA";
-            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // groupBox13
-            // 
-            this.groupBox13.Controls.Add(this.label12);
-            this.groupBox13.Location = new System.Drawing.Point(824, 567);
-            this.groupBox13.Name = "groupBox13";
-            this.groupBox13.Size = new System.Drawing.Size(293, 54);
-            this.groupBox13.TabIndex = 17;
-            this.groupBox13.TabStop = false;
-            this.groupBox13.Text = "Channel 12: Not used";
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(6, 18);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(40, 25);
-            this.label12.TabIndex = 3;
-            this.label12.Text = "NA";
-            this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.groupBox8.Text = "Text box";
             // 
             // Form1
             // 
@@ -551,10 +469,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.ClientSize = new System.Drawing.Size(1151, 660);
-            this.Controls.Add(this.clearRichTextBox);
-            this.Controls.Add(this.groupBox13);
-            this.Controls.Add(this.groupBox12);
-            this.Controls.Add(this.groupBox11);
             this.Controls.Add(this.groupBox8);
             this.Controls.Add(this.groupBox7);
             this.Controls.Add(this.groupBox6);
@@ -601,13 +515,6 @@
             this.groupBox7.ResumeLayout(false);
             this.groupBox7.PerformLayout();
             this.groupBox8.ResumeLayout(false);
-            this.groupBox8.PerformLayout();
-            this.groupBox11.ResumeLayout(false);
-            this.groupBox11.PerformLayout();
-            this.groupBox12.ResumeLayout(false);
-            this.groupBox12.PerformLayout();
-            this.groupBox13.ResumeLayout(false);
-            this.groupBox13.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -648,16 +555,9 @@
         private System.Windows.Forms.GroupBox groupBox7;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.GroupBox groupBox8;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.GroupBox groupBox11;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.GroupBox groupBox12;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.GroupBox groupBox13;
-        private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.GroupBox groupBox8;
     }
 }
 

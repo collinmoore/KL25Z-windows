@@ -11,7 +11,7 @@ namespace Battery_charger_tester_gui
 
         private static DataStorage dataStorage;
 
-        private Boolean verbosity = true; // set this to change the amount of data going to the serial monitor window, RichTextBox1
+        private Boolean verbosity = false; // set this to change the amount of data going to the serial monitor window, RichTextBox1
         // variables for storing current and past values
         /**********************************    Define number of ADC channels to measure from     **************************/
         private int numADCChannels;
@@ -19,18 +19,23 @@ namespace Battery_charger_tester_gui
         private UInt16[] ADCCounts;
         private decimal[] decimalValues;
         private decimal[] scalingFactors = {
-                                       /* Channel 1 scaling factor */ 6.06000M,  // 6.06 multiplier for 3.3V to 20V
-                                       /* Channel 2 scaling factor */ 1.51515M,   // 1.5151 multiplier for 3.3V to 5V
-                                       /* Channel 3 scaling factor */ 1.51515M,  // 1.5151 multiplier for 3.3V to 5V
-                                       /* Channel 4 scaling factor */ 1.51515M,//1.5151515151515151M; // to scale the 3.3V count to 5V. Voltage dividers must be used.,
-                                       /* Channel 5 scaling factor */ 1.00000M, // same scale as the battery voltage scaling factor.
-                                       /* Channel 6 scaling factor */ 1.00000M, // conversion factor for voltage count to current. Must be CALIBRATED
-                                       /* Channel 7 scaling factor */ 1.00000M,// 2.727272
-                                       /* Channel 8 scaling factor */ 1.00000M,
+                                       /* Channel 1 scaling factor */ 2.9890000000M,// 6.872852234M,  //  multiplier for 2.91V to 20V
+                                       /* Channel 2 scaling factor */ 2.9840000000M,  //  multiplier for 2.91V to 6.0V
+                                       /* Channel 3 scaling factor */ 1.4980000000M,  //  multiplier for 2.91V to 5.0V
+                                       /* Channel 4 scaling factor */ 1.4980000000M,  //  multiplier for 2.91V to 5.0V
+                                       /* Channel 5 scaling factor */ 1.9410000M, //  
+                                       /* Channel 6 scaling factor */ 1.9410000M, //  
+                                       /* Channel 7 scaling factor */ 1.9410000M, //  
+                                       /* Channel 8 scaling factor */ 1.9410000M, //
                                        /* Channel 9 scaling factor */ 1.00000M,
                                        /* Channel 10 scaling factor */ 1.00000M,
                                        /* Channel 11 scaling factor */ 1.00000M,
-                                       /* Channel 12 scaling factor */ 1.00000M};
+                                       /* Channel 12 scaling factor */ 1.00000M,
+                                       /* Channel 13 scaling factor */ 1.00000M,
+                                       /* Channel 14 scaling factor */ 1.00000M,
+                                       /* Channel 15 scaling factor */ 1.00000M,
+                                       /* Channel 16 scaling factor */ 1.00000M,
+                                    };
         private string[] units = {
                                /* Channel 1 units (V or A usually) */ "V",
                                /* Channel 2 units (V or A usually) */ "V",
@@ -43,16 +48,20 @@ namespace Battery_charger_tester_gui
                                /* Channel 9 units (V or A usually) */ "V",
                                /* Channel 10 units (V or A usually) */ "V",
                                /* Channel 11 units (V or A usually) */ "V",
-                               /* Channel 12 units (V or A usually) */ "V"
-                         };
+                               /* Channel 12 units (V or A usually) */ "V",
+                               /* Channel 13 units (V or A usually) */ "V",
+                               /* Channel 14 units (V or A usually) */ "V",
+                               /* Channel 15 units (V or A usually) */ "V",
+                               /* Channel 16 units (V or A usually) */ "V"
+                             };
         // logging rates to choose from in the drop-down
-        public readonly int[] logrates = {200, 500, 900, 1000, 2000, 5000, 10000, 20000, 30000, 60000, 120000, 300000 };
+        public readonly int[] logrates = { 200, 500, 900, 1000, 2000, 5000, 10000, 20000, 30000, 60000, 120000, 300000 };
         // Array of duty cycle choices for the load circuit timing
         public readonly string[] dutyCycleChoices = { "off(no current draw)", "10-10-80 (6,6,48)", "5-5-90 (3,3,54)", 
                                   "5-45-50 (3,27,30)", "100 mA","250 mA",
                                   "500 mA", "750 mA", "1000 mA", "1500 mA", "2000mA", "2500mA", "3000mA"};
         private int currentDutyCycle; // default is 0x00 for 5-5-90
-        private const decimal voltsPerCount = (decimal)(3.3 / 65535); // volts per count will be the max volts divided by the max counts
+        private const decimal voltsPerCount = (decimal)(2.910 / 65535); // volts per count will be the max volts divided by the max counts
 
         private DataStorage()
         {
@@ -106,8 +115,16 @@ namespace Battery_charger_tester_gui
         // method to set current duty cycle
         public void setCurrentDutyCycle(int currentDutyCycle)
         {
-            checkDutyCycle(currentDutyCycle);
-            this.currentDutyCycle = currentDutyCycle;
+            try
+            {
+                checkDutyCycle(currentDutyCycle);
+                this.currentDutyCycle = currentDutyCycle;
+            }
+            catch (Exception ex)
+            {
+                Form1 form1 = Form1.getInstance();
+                form1.appendToRichTextBox1(ex.Message + "\r");
+            }
         }
 
         // method to get current dutyCycle

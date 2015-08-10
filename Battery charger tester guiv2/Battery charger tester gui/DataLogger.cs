@@ -11,7 +11,7 @@ namespace Battery_charger_tester_gui
     {
         private static DataLogger instance;
         private ConnectionManager connectionManager;
-        private string[] logfiles;
+        private string[] logfiles = { "Systemlog.txt", "valuesLog.csv" };
         private System.Timers.Timer logTimer;
         private Form1 form1;
         private DataStorage dataStorage;
@@ -61,48 +61,54 @@ namespace Battery_charger_tester_gui
             return instance;
         }
 
-        public bool prepareLogFiles(int numChannels)
+        public void prepareLogFiles()
         {
-            logfiles = new string[dataStorage.getNumADCChannels() + 2];
-            logfiles[0] = "Systemlog.txt"; // system log has overview of when logging started/stopped
-            for (int i = 1; i <= dataStorage.getNumADCChannels(); i++)
+            try
             {
-                //logfile names for each channel measured
-                logfiles[i] = "Channel" + i + "_log.csv";
-            }
-            
-            logfiles[dataStorage.getNumADCChannels()+1] = "DutyCycleLog.csv"; // log of duty cycle setting.
-            // start logs for all variables, delete the old ones first.
-            // delete the old one if there is one.
-            foreach (string n in logfiles)
-            {
-                if (System.IO.File.Exists(n))
+                foreach (string n in logfiles)
                 {
-                    System.IO.File.Delete(n); // delete the old one if there is one.
-                }
-                System.IO.File.AppendAllText(n, "************** begin log file at "
-                    + DateTime.Now.ToString("h:mm:ss tt") + " **************\r", Encoding.UTF8);
-            }
+                    if (System.IO.File.Exists(n))
+                    {
+                        System.IO.File.Delete(n); // delete the old one if there is one.
+                    }
 
-            return true;
+                    System.IO.File.AppendAllText(n, "**** begin log file at "
+                        + DateTime.Now.ToString("h:mm:ss tt") + " ****\r", Encoding.UTF8);
+
+                }
+                for (int i = 0; i < dataStorage.getNumADCChannels(); i++)
+                {
+                    writeToLogFile(1, "Ch " + (i + 1) + ",");
+                }
+                writeToLogFile(1, "Duty cycle, Elapsed Milliseconds\r");
+            }
+            catch (System.IO.IOException ex)
+            {
+                form1.appendToRichTextBox1("Error preparing log files\r"+ex.Message + "\r");
+            }
         }
 
         // clear measurement logs
         public void clearLogs()
         {
-            for (int i = 1; i <= dataStorage.getNumADCChannels(); i++)
+            try
             {
-                if (System.IO.File.Exists(logfiles[i]))
+                if (System.IO.File.Exists(logfiles[1]))
                 {
-                    System.IO.File.Delete(logfiles[i]); // delete the old one if there is one.
+                    System.IO.File.Delete(logfiles[1]);
                 }
-                writeToLogfile(i, "***** begin channel " + i + " log file at "
-                    + DateTime.Now.ToString("h:mm:ss tt") + " ****  ,");
+                writeToLogFile(0, " ****************** Cleared data logs at "
+                        + DateTime.Now.ToString("h:mm:ss tt") + " **************\r");
+                for (int i = 0; i < dataStorage.getNumADCChannels(); i++)
+                {
+                    writeToLogFile(1, "Ch " + (i + 1) + ",");
+                }
+                writeToLogFile(1, "Duty cycle, Elapsed Milliseconds\r");
             }
-            writeToLogfile(0, " ****************** Cleared data logs at "
-                    + DateTime.Now.ToString("h:mm:ss tt") + " **************\r");
-            writeToLogfile((dataStorage.getNumADCChannels() + 1), "*****  begin duty cycle log file at "
-                    + DateTime.Now.ToString("h:mm:ss tt") + " ****  ,");
+            catch (System.IO.IOException ex)
+            {
+                form1.appendToRichTextBox1("Error deleting log files\r"+ex.Message + "\r");
+            }
         }
 
         // set the logging rate
@@ -136,37 +142,32 @@ namespace Battery_charger_tester_gui
                 form1.appendToRichTextBox1("Timer tick, refershing logs\r");
             }
             form1.dataAndButton(); // triggers update of all variables
-            logADCData();
-            logDutyCycle();
+            logData();
         }
 
-        public void logADCData()
+        public void logData()
         {
             /* log each channel's value in decimal form. */
             for (int i = 1; i <= dataStorage.getNumADCChannels(); i++)
             {
-                System.IO.File.AppendAllText(logfiles[i], dataStorage.getDecimalValues(i-1) + "," + elapsedMillis + "\r", Encoding.UTF8);
+                writeToLogFile(1, dataStorage.getDecimalValues(i - 1) + ",");
             }
+            writeToLogFile(1, dataStorage.getCurrentDutyCycle() + ",");
+            writeToLogFile(1, elapsedMillis + "\r"); // log the elapsed time
             /* update system log file */
-            System.IO.File.AppendAllText(logfiles[0], "Logged all channel values at " + DateTime.Now.ToString("h:mm:ss tt") + "\r", Encoding.UTF8);
             if (dataStorage.getVerbosity())
             {
-                form1.appendToRichTextBox1("Logged all ADC channel data at "+DateTime.Now.ToString("h:mm:ss tt")+"\r");
+                form1.appendToRichTextBox1("Logged all ADC channel data at " + DateTime.Now.ToString("h:mm:ss tt") + "\r");
+                writeToLogFile(0, "Logged all channel values at " + DateTime.Now.ToString("h:mm:ss tt") + "\r");
             }
-        }
-
-        // method to log state of duty cycle
-        public void logDutyCycle()
-        {
-            /* update duty cycle log file */
-            System.IO.File.AppendAllText(logfiles[dataStorage.getNumADCChannels() + 1], dataStorage.getCurrentDutyCycle() + "," + elapsedMillis + "\r", Encoding.UTF8);
         }
 
         // method to write to the specified logfile
-        public void writeToLogfile(int index, string text)
+        public void writeToLogFile(int index, string text)
         {
             if (index < logfiles.Length)
             {
+
                 System.IO.File.AppendAllText(logfiles[index], text, Encoding.UTF8);
             }
             else

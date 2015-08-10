@@ -23,7 +23,10 @@ namespace Battery_charger_tester_gui
         private SerialPort serialPort;
         private int[] baudValues = { 2400, 4800, 7200, 9600, 14400, 19200, 38400, 57600, 115200 }; // 128000 gives parameter incorrect for serial port
         private int serialTimeoutCounter = 0;
-        private const int serialTimeout = 40;  /*******************  waits for 500ms, since the loop will wait 1ms each increment *****/
+        private int serialTimeout = 200;  /*******************  ms to time out a serial transaction *****/
+        private const int maxSerialTimeout = 1000;
+        private const int minSerialTimeout = 200;
+        private const int connectTimeout = 20; // ms to time out the serial connection attempt
         private Boolean serialDone = true;
         private TxPacket txPacket;
         private RxPacket rxPacket;
@@ -105,7 +108,7 @@ namespace Battery_charger_tester_gui
                             serialPort.DiscardInBuffer();
                             serialPort.Write(txPacket.asByteArray(), 0, 3);
                             rxPacket = new RxPacket(); // make a new incoming packet to store data in.
-                            while ((serialPort.BytesToRead < 3) && (serialTimeoutCounter < serialTimeout))
+                            while ((serialPort.BytesToRead < 3) && (serialTimeoutCounter < connectTimeout))
                             {
                                 Thread.Sleep(1);
                                 serialTimeoutCounter++;
@@ -121,6 +124,7 @@ namespace Battery_charger_tester_gui
                                 rxPacket.setInstruction((Byte)serialPort.ReadByte());
                                 rxPacket.setData1((Byte)serialPort.ReadByte());
                                 rxPacket.setData2((Byte)serialPort.ReadByte());
+
                                 if ((rxPacket.getInstruction() == RxPacket.RX_INSTRUCTION_HANDSHAKE) && (rxPacket.getData2() == RxPacket.RX_DATA2_HANDSHAKE))
                                 {
                                     incomingPackets.Enqueue(rxPacket); // put the handshake response packet in the incoming packets queue.
@@ -135,7 +139,7 @@ namespace Battery_charger_tester_gui
                                     {
                                         form1.appendToRichTextBox1("An MCU at " + serialPort.PortName + ", " + serialPort.BaudRate +
                                             " baud replied with " + rxPacket.getInstruction().ToString("x") + " " +
-                                            rxPacket.getData1().ToString("x") + " " + rxPacket.getData2().ToString("x")+"\r");
+                                            rxPacket.getData1().ToString("x") + " " + rxPacket.getData2().ToString("x") + "\r");
                                     }
                                     serialPort.DiscardInBuffer();
                                     serialPort.DiscardOutBuffer();
@@ -211,14 +215,6 @@ namespace Battery_charger_tester_gui
             {
                 try
                 {
-                    //while (serialPort.BytesToRead >= 3)
-                    //{
-                    //    rxPacket = new RxPacket();
-                    //    rxPacket.setInstruction((Byte)serialPort.ReadByte());
-                    //    rxPacket.setData1((Byte)serialPort.ReadByte());
-                    //    rxPacket.setData2((Byte)serialPort.ReadByte());
-                    //    parseData(rxPacket);
-                    //}
                     while (serialPort.BytesToRead >= 3)
                     {
                         rxPacket = new RxPacket();
@@ -237,6 +233,10 @@ namespace Battery_charger_tester_gui
                     Exception real = ex.GetBaseException();
                     MessageBox.Show(real.Message);
                 }
+                catch (Exception ex)
+                {
+                    form1.appendToRichTextBox1(ex.Message);
+                }
                 parseData(incomingPackets);
                 serialDone = true;
             }
@@ -251,7 +251,18 @@ namespace Battery_charger_tester_gui
                 switch (rxPacket.getInstruction())
                 {
                     case RxPacket.RX_INSTRUCTION_HANDSHAKE:
-                        dataStorage.setNumADCChannels(rxPacket.getData1());
+                        int numChannels = rxPacket.getData1();
+                        if (numChannels < 8)
+                        {
+                            form1.appendToRichTextBox1("MCU has " + numChannels + " channels.\r");
+                        }
+                        if (numChannels > 8)
+                        {
+                            numChannels = 8;
+                            form1.appendToRichTextBox1("MCU has more than 8 channels.\rUsing channels 0-7\r");
+                         
+                        }
+                        dataStorage.setNumADCChannels(numChannels);
                         form1.appendToRichTextBox1("received handshake packet from MCU.\r");
                         break;
                     case RxPacket.RX_INSTRUCTION_READ_ADC_CHANNEL_ZERO:
@@ -317,7 +328,20 @@ namespace Battery_charger_tester_gui
             txPacket.setData2((Byte)0x00U);
             serialPort.Write(txPacket.asByteArray(), 0, 3);
             serialDone = false;
-            timeoutWait();
+            try
+            {
+                timeoutWait();
+            }
+            catch (TimeoutException ex)
+            {
+                if (serialTimeout < maxSerialTimeout)
+                {
+                    serialTimeout+=100;
+                    serialDone = true;
+                    readADC(channel);
+                }
+                else throw new TimeoutException(ex.Message);
+            }
             if (dataStorage.getVerbosity())
             {
                 form1.appendToRichTextBox1("Sent command to read ADC channel " + channel + "\r");
@@ -336,6 +360,7 @@ namespace Battery_charger_tester_gui
                     Thread.Sleep(1); // wait for 1 ms to get the parsing done and be able to update ADC voltage properly
                     if ((serialTimeoutCounter >= serialTimeout) & serialTimeoutEnable)
                     {
+                        serialTimeoutCounter = 0;
                         throw new TimeoutException();
                     }
                     // does nothing until the serial input packets have been read up to the EOF, 
@@ -344,9 +369,13 @@ namespace Battery_charger_tester_gui
                 serialTimeoutCounter = 0;
                 // Thread.Sleep(1); // wait for 50 ms to get the parsing done and be able to update ADC voltage properly
             }
+            catch (TimeoutException ex)
+            {
+                throw new TimeoutException(ex.Message);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                form1.appendToRichTextBox1("Unknown exception caught in timeoutWait function, message" + ex.Message + "\r");
             } // labels get updated when the serial port has received stuff and changed stored values
         }
 
@@ -375,11 +404,24 @@ namespace Battery_charger_tester_gui
                 form1.appendToRichTextBox1("Sent command to set duty cycle to " + txPacket.getData1() + "\r");
             }
             serialDone = false;
-            timeoutWait();
+            try
+            {
+                timeoutWait();
+            }
+            catch (TimeoutException ex)
+            {
+                if (serialTimeout < maxSerialTimeout)
+                {
+                    serialTimeout+=100;
+                    serialDone = true;
+                    setDutyCycle(selection);
+                }
+                else throw new TimeoutException(ex.Message);
+            }
         }
 
         // read duty cycle from MCU
-        public void readDutyCycle()
+        public void getDutyCycle()
         {
             txPacket.setInstruction(TxPacket.INSTRUCTION_READ_DUTY_CYCLE);
             txPacket.setData1(0x00);
@@ -390,8 +432,30 @@ namespace Battery_charger_tester_gui
                 form1.appendToRichTextBox1("sent command to read duty cycle\r");
             }
             serialDone = false;
-            timeoutWait();
+            try
+            {
+                timeoutWait();
+            }
+            catch (TimeoutException ex)
+            {
+                if (serialTimeout < maxSerialTimeout)
+                {
+                    serialTimeout+=100;
+                    serialDone = true;
+                    getDutyCycle();
+                }
+                else throw new TimeoutException(ex.Message);
+            }
 
+        }
+
+        public void refreshSerial()
+        {
+            txPacket.setInstruction(TxPacket.INSTRUCTION_READ_ADC);
+            txPacket.setData1(0x00);
+            txPacket.setData2(0x00);
+            serialPort.Write(txPacket.asByteArray(), 0, 3);
+            serialTimeout = minSerialTimeout;
         }
     }
 }
