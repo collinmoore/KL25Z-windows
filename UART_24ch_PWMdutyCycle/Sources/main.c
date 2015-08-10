@@ -62,14 +62,33 @@ const uint16 PWM_RATIO_1500MA = 0x1DFFU;
 const uint16 PWM_RATIO_2000MA = 0x1BFFU;
 const uint16 PWM_RATIO_2500MA = 0x1A9FU;
 const uint16 PWM_RATIO_3000MA = 0x1907U;
-		
-	bool oneSecondTick = FALSE;
-	uint8 status = ERR_OK;
-	uint8 dutyCycle = 0; // set duty cycle to 0 by default
-	uint32 dutyCycleCounter = 0; // counter for where the duty cycle is
-	uint16 pwmRatio = 0xFFFFU;
-	word voltageValues[12] = {0}; // voltageValues stores the ADC counts
-	uint8 adcReadStatus = ERR_OK;
+
+
+const uint16 ADC_COUNT_100MA = 0x04D0U;
+const uint16 ADC_COUNT_250MA = 0x0B50U;
+const uint16 ADC_COUNT_500MA = 0x1720U;
+const uint16 ADC_COUNT_750MA = 0x2200U;
+const uint16 ADC_COUNT_1000MA = 0x2DB0U;
+const uint16 ADC_COUNT_1500MA = 0x4480U;
+const uint16 ADC_COUNT_2000MA = 0x5AF0U;
+const uint16 ADC_COUNT_2500MA = 0x71B0U;
+const uint16 ADC_COUNT_3000MA = 0x8890U;
+
+const uint16 ADC_COUNT_IDLE = 0x0B50U;
+const uint16 ADC_COUNT_RX = 0x0B50U;
+const uint16 ADC_COUNT_TX = 0x4480U;
+
+/**************    control loop variables    ********************/
+uint16 error = 0x0002; // used to determine the difference between the current and desired current
+
+bool firstDutySet = TRUE;
+bool oneSecondTick = FALSE;
+uint8 status = ERR_OK;
+uint8 dutyCycle = 0; // set duty cycle to 0 by default
+uint32 dutyCycleCounter = 0; // counter for where the duty cycle is
+uint16 pwmRatio = 0xFFFFU;
+uint16 voltageValues[AD1_CHANNEL_COUNT] = {0}; // voltageValues stores the ADC counts
+uint8 adcReadStatus = ERR_OK;
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
 /*lint -restore Enable MISRA rule (6.3) checking. */
@@ -109,9 +128,9 @@ int main(void)
 			GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, off (active low LEDs)
 			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 		  UART_ParseData();
-		  // light to green for connected
+		  // turn off after transmit
 			GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
-			GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
+			GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 	  }
 	  if(oneSecondTick){
@@ -124,7 +143,10 @@ int main(void)
 		  	uint8 * halfword_ptr =(uint8*)&voltageValues[7]; // temporary pointer to get out data from the little-endian bytes in the word
 		  	uint16 sixteenBitCurrentCount = *halfword_ptr; 
 		  	sixteenBitCurrentCount |= (*(++halfword_ptr) <<8); // swap bytes from little to big endian
-		  	
+		  // turn off lights after measurement
+			GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
+			GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
+			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 		  switch(dutyCycle){
 			case 0x00U:
 				/* 0x00 is off, both circuits off all the time
@@ -146,43 +168,52 @@ int main(void)
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_TX; // set PWM duty cycle for transmit
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_TX; // set PWM duty cycle to transmit
+						if(sixteenBitCurrentCount > ADC_COUNT_TX) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
+				if(dutyCycleCounter==0x06U) firstDutySet = TRUE;
 				else if(dutyCycleCounter<0x0CU){ // if more than 6 seconds but less than 12 seconds, should be in rx mode			
 					// purple for second highest load
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x000FFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_RX; // set PWM duty cycle for receive
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_RX; // set PWM duty cycle to receive
+						if(sixteenBitCurrentCount > ADC_COUNT_RX) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
+				if(dutyCycleCounter==0x0CU) firstDutySet = TRUE;
 				else if(dutyCycleCounter<0x3CU){ // if more than 12 seconds but less than 60 seconds, should be in standby mode
 					/* AS OF JUNE 1 2015, STANDBY MODE == RX MODE */
 					// blue for least current draw
 					GPIOB_PSOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00000FFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_IDLE; // set PWM duty cycle for idle
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_IDLE; // set PWM duty cycle for idle
+						if(sixteenBitCurrentCount > ADC_COUNT_IDLE) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
 				else{  // reset counter
 					dutyCycleCounter=0;
+					firstDutySet = TRUE;
 				}
 				break;
 			case 0x02U:
@@ -196,43 +227,52 @@ int main(void)
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_TX; // set PWM duty cycle for transmit
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_TX; // set PWM duty cycle to transmit
+						if(sixteenBitCurrentCount > ADC_COUNT_TX) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
+				if(dutyCycleCounter==0x06U) firstDutySet = TRUE;
 				else if(dutyCycleCounter<0x06U){ // if more than 3 seconds but less than 6 seconds, should be in rx mode
 					// purple for receive current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_RX; // set PWM duty cycle for receive
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_RX; // set PWM duty cycle to receive
+						if(sixteenBitCurrentCount > ADC_COUNT_RX) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
+				if(dutyCycleCounter==0x3CU) firstDutySet = TRUE;
 				else if(dutyCycleCounter<0x3CU){ // if more than 6 seconds but less than 60 seconds, should be in standby mode
 					/* AS OF JUNE 1 2015, STANDBY MODE == RX MODE */
 					// blue for least current draw
 					GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_IDLE; // set PWM duty cycle for idle
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_IDLE; // set PWM duty cycle to 75%, for transmit
+						if(sixteenBitCurrentCount > ADC_COUNT_IDLE) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
 				else{  // reset counter
 					dutyCycleCounter=0;
+					firstDutySet = TRUE;
 				}
 				break;
 			case 0x03U:
@@ -246,43 +286,52 @@ int main(void)
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_TX; // set PWM duty cycle for transmit
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_TX; // set PWM duty cycle to transmit
+						if(sixteenBitCurrentCount > ADC_COUNT_TX) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
+				if(dutyCycleCounter==0x03U) firstDutySet = TRUE;
 				else if(dutyCycleCounter<0x1EU){ // if more than 3 seconds but less than 30 seconds, should be in rx mode
 					// purple for receive current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_RX; // set PWM duty cycle for receive
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_RX; // set PWM duty cycle to receive
+						if(sixteenBitCurrentCount > ADC_COUNT_RX) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
+				if(dutyCycleCounter==0x1EU) firstDutySet = TRUE;
 				else if(dutyCycleCounter<0x3CU){ // if more than 30 seconds but less than 60 seconds, should be in standby mode
 					/* AS OF JUNE 1 2015, STANDBY MODE == RX MODE */
 					// blue for least current draw
 					GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 					GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-					if(sixteenBitCurrentCount > 0x00FFFFFFU){ // if current is greater than what it should be, decrease the ratio
-						pwmRatio++;
+					if(firstDutySet){
+						pwmRatio = PWM_RATIO_IDLE; // set PWM duty cycle for idle
+						firstDutySet = FALSE;
 					}
 					else{
-						pwmRatio = PWM_RATIO_IDLE; // set PWM duty cycle to idle
+						if(sixteenBitCurrentCount > ADC_COUNT_IDLE) pwmRatio+=error;
+						else pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
 				else{ // reset counter
 					dutyCycleCounter=0;
+					firstDutySet = TRUE;
 				}
 				break;
 			case 0x04U:
@@ -291,11 +340,13 @@ int main(void)
 				GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
 				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x044CU){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_100MA; // set PWM duty cycle to 100mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_100MA; // set PWM duty cycle to 100mA draw
+					if(sixteenBitCurrentCount > ADC_COUNT_100MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x05U:
@@ -304,11 +355,13 @@ int main(void)
 				GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
 				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x09D7U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_250MA; // set PWM duty cycle to 250mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_250MA; // set PWM duty cycle to 250mA draw
+					if(sixteenBitCurrentCount > ADC_COUNT_250MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x06U:
@@ -317,11 +370,13 @@ int main(void)
 				GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
 				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x1419U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_500MA; // set PWM duty cycle to 500mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_500MA; // set PWM duty cycle to 500mA load
+					if(sixteenBitCurrentCount > ADC_COUNT_500MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x07U:
@@ -330,11 +385,13 @@ int main(void)
 				GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x1E09U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_750MA; // set PWM duty cycle to 750mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_750MA; // set PWM duty cycle to 750mA load
+					if(sixteenBitCurrentCount > ADC_COUNT_750MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x08U:
@@ -343,12 +400,22 @@ int main(void)
 				GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x2870U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_1000MA; // set PWM duty cycle to 1000mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_1000MA; // set PWM duty cycle to 1000mA load
-				}
+					if(sixteenBitCurrentCount > ADC_COUNT_1000MA) pwmRatio+=error;
+					else pwmRatio-=error;
+					/*if(sixteenBitCurrentCount > ADC_COUNT_1000MA){
+						error = sixteenBitCurrentCount-ADC_COUNT_1000MA;
+						pwmRatio+=error;
+					}
+					else{
+						error = ADC_COUNT_1000MA-sixteenBitCurrentCount;
+						pwmRatio-=error;
+					}*/
+				}				
 				break;
 			case 0x09U:
 				/* 0x09 is for continuous 1500mA load */
@@ -356,11 +423,13 @@ int main(void)
 				GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x3B55U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_1500MA; // set PWM duty cycle to 1500mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_1500MA; // set PWM duty cycle
+					if(sixteenBitCurrentCount > ADC_COUNT_1500MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x0A:
@@ -369,11 +438,13 @@ int main(void)
 				GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 				GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x4F00U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_2000MA; // set PWM duty cycle to 2000mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_2000MA; // set PWM duty cycle
+					if(sixteenBitCurrentCount > ADC_COUNT_2000MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x0B:
@@ -382,11 +453,13 @@ int main(void)
 				GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 				GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x62F0U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_2500MA; // set PWM duty cycle to 2500mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_2500MA; // set PWM duty cycle
+					if(sixteenBitCurrentCount > ADC_COUNT_2500MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 			case 0x0C:
@@ -395,11 +468,13 @@ int main(void)
 				GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 				GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
 				GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-				if(sixteenBitCurrentCount > 0x7AA0U){ // if current is greater than what it should be, decrease the ratio
-					pwmRatio++;
+				if(firstDutySet){
+					pwmRatio = PWM_RATIO_3000MA; // set PWM duty cycle to 3000mA draw
+					firstDutySet = FALSE;
 				}
 				else{
-					pwmRatio = PWM_RATIO_3000MA; // set PWM duty cycle
+					if(sixteenBitCurrentCount > ADC_COUNT_3000MA) pwmRatio+=error;
+					else pwmRatio-=error;
 				}
 				break;
 				
@@ -408,9 +483,10 @@ int main(void)
 				 * 	set to off mode continuously
 				 */
 				dutyCycle = 0x00U; // set to off mode
-				GPIOD_PCOR= 0x00000040U; // set pin D6 low, rx off
-				GPIOD_PCOR= 0x00000080U; // set pin D7 low, tx off
-				pwmRatio = 0xFFFFU; // set PWM duty cycle to 0%, for off
+				GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
+				GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
+				GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
+				pwmRatio = PWM_RATIO_OFF; // set PWM duty cycle to 0%, for off
 				break;
 		}
 		PWM1_SetRatio16(pwmRatio);

@@ -179,7 +179,9 @@ void UART_Init(void) {
 		if(adcReadStatus ==ERR_OK){
 			tx_packet[0] = (rx_packet[0]|rx_packet[1]); // send back command and the channel ORed
 			uint8_t offset = rx_packet[1]; // get the offset in words to start reading at, which is the ADC to read from.
-			byte * halfword_ptr = (byte *)&voltageValues[offset]; // pointer to point to bytes instead of words, starting at word offset
+			uint8 * halfword_ptr = (byte *)&voltageValues[offset]; // pointer to point to bytes instead of words, starting at word offset
+			//tx_packet[2] = (uint8)(voltageValues[offset]&&0x00FF);
+			//tx_packet[1] = (uint8)(voltageValues[offset]>>8);
 			tx_packet[2] = *halfword_ptr; // byte-little-endian, LSB half sent first, must be read in and shifted into MSB half by PC
 			tx_packet[1] = *(++halfword_ptr); // LSB is tx_packet[2], MSB is tx_packet[1]
 		}
@@ -203,12 +205,13 @@ void UART_Init(void) {
 		}
 		else{
 			uint8 oldDutyCycle = dutyCycle;
+			dutyCycleCounter=0;
+			firstDutySet = TRUE;
 			dutyCycle = rx_packet[1]; // set duty cycle to either 1, 2, 2, 4, 5, 6, or 7
 			tx_packet[1] = oldDutyCycle; // send back the old duty cycle
 			tx_packet[2] = dutyCycle; // send back the new duty cycle
 		}
 		tx_packet[0] = TX_INSTRUCTION_SET_DUTY_CYCLE;
-		dutyCycleCounter=0;
 	}
 	else if((rx_packet[0]==RX_INSTRUCTION_HANDSHAKE)
 			&&(rx_packet[1]==RX_DATA1_HANDSHAKE)

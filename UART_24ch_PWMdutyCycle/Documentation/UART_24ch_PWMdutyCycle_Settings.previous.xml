@@ -490,7 +490,7 @@ PE_DEBUGHALT();
     <Enabled v="Y" />
     <Properties>
       <Component_name v="RxBuf" />
-      <Buffer_Size v="6" />
+      <Buffer_Size v="3" />
     </Properties>
     <Methods>
       <Put v="generate code" />
@@ -727,12 +727,9 @@ PE_DEBUGHALT();
           <Component_name v="AdcLdd1" />
           <A_D_converter v="ADC0" />
           <Discontinuous_mode v="no" />
-          <boolgroup name="Interrupt service/event" v="Enabled">
-            <A_D_interrupt v="INT_ADC0" />
-            <A_D_interrupt_priority v="high priority" />
-          </boolgroup>
+          <boolgroup name="Interrupt service/event" v="Disabled" />
           <boolgroup name="DMA" v="Disabled" />
-          <list name="A/D channel list" v="12">
+          <list name="A/D channel list" v="8">
             <group name="Channel 0">
               <enumgroup name="Channel mode" v="Single Ended">
                 <group name="Input">
@@ -789,34 +786,6 @@ PE_DEBUGHALT();
                 </group>
               </enumgroup>
             </group>
-            <group name="Channel 8">
-              <enumgroup name="Channel mode" v="Single Ended">
-                <group name="Input">
-                  <A_D_channel__pin_ v="ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1" />
-                </group>
-              </enumgroup>
-            </group>
-            <group name="Channel 9">
-              <enumgroup name="Channel mode" v="Single Ended">
-                <group name="Input">
-                  <A_D_channel__pin_ v="ADC0_SE14/TSI0_CH13/PTC0/EXTRG_IN/CMP0_OUT" />
-                </group>
-              </enumgroup>
-            </group>
-            <group name="Channel 10">
-              <enumgroup name="Channel mode" v="Single Ended">
-                <group name="Input">
-                  <A_D_channel__pin_ v="ADC0_SE15/TSI0_CH14/PTC1/LLWU_P6/RTC_CLKIN/I2C1_SCL/TPM0_CH0" />
-                </group>
-              </enumgroup>
-            </group>
-            <group name="Channel 11">
-              <enumgroup name="Channel mode" v="Single Ended">
-                <group name="Input">
-                  <A_D_channel__pin_ v="ADC0_SE11/TSI0_CH15/PTC2/I2C1_SDA/TPM0_CH1" />
-                </group>
-              </enumgroup>
-            </group>
           </list>
           <boolgroup name="Static sample groups" v="Disabled" />
           <A_D_resolution v="16 bits" />
@@ -847,7 +816,7 @@ PE_DEBUGHALT();
               <Auto_initialization v="no" />
             </list>
             <group name="Event mask">
-              <OnMeasurementComplete v="Enabled" />
+              <OnMeasurementComplete v="Disabled" />
               <OnError v="Disabled" />
             </group>
           </group>
@@ -893,17 +862,12 @@ PE_DEBUGHALT();
         </Methods>
         <Events>
           <Event_module_name v="Events" />
-          <event name="OnMeasurementComplete" v="generate code">
-            <Event_procedure_name v="AdcLdd1_OnMeasurementComplete" />
-          </event>
+          <event name="OnMeasurementComplete" v="don&amp;apos;t generate code" />
           <event name="OnError" v="don&amp;apos;t generate code" />
         </Events>
       </inhrbean>
-      <boolgroup name="Interrupt service/event" v="Enabled">
-        <A_D_interrupt v="INT_ADC0" />
-        <A_D_interrupt_priority v="high priority" />
-      </boolgroup>
-      <list name="A/D channels" v="12">
+      <boolgroup name="Interrupt service/event" v="Disabled" />
+      <list name="A/D channels" v="8">
         <group name="Channel0">
           <A_D_channel__pin_ v="ADC0_DP0/ADC0_SE0/PTE20/TPM1_CH0/UART0_TX" />
           <boolgroup name="Mode select" v="Single Ended" />
@@ -934,22 +898,6 @@ PE_DEBUGHALT();
         </group>
         <group name="Channel7">
           <A_D_channel__pin_ v="ADC0_SE12/TSI0_CH7/PTB2/I2C0_SCL/TPM2_CH0" />
-          <boolgroup name="Mode select" v="Single Ended" />
-        </group>
-        <group name="Channel8">
-          <A_D_channel__pin_ v="ADC0_SE13/TSI0_CH8/PTB3/I2C0_SDA/TPM2_CH1" />
-          <boolgroup name="Mode select" v="Single Ended" />
-        </group>
-        <group name="Channel9">
-          <A_D_channel__pin_ v="ADC0_SE14/TSI0_CH13/PTC0/EXTRG_IN/CMP0_OUT" />
-          <boolgroup name="Mode select" v="Single Ended" />
-        </group>
-        <group name="Channel10">
-          <A_D_channel__pin_ v="ADC0_SE15/TSI0_CH14/PTC1/LLWU_P6/RTC_CLKIN/I2C1_SCL/TPM0_CH0" />
-          <boolgroup name="Mode select" v="Single Ended" />
-        </group>
-        <group name="Channel11">
-          <A_D_channel__pin_ v="ADC0_SE11/TSI0_CH15/PTC2/I2C1_SDA/TPM0_CH1" />
           <boolgroup name="Mode select" v="Single Ended" />
         </group>
       </list>
@@ -1001,14 +949,8 @@ PE_DEBUGHALT();
       <Event_module_name v="Events" />
       <event name="BeforeNewSpeed" v="don&amp;apos;t generate code" />
       <event name="AfterNewSpeed" v="don&amp;apos;t generate code" />
-      <event name="OnEnd" v="generate code">
-        <Event_procedure_name v="AD1_OnEnd" />
-        <Priority v="same as interrupt" />
-      </event>
-      <event name="OnCalibrationEnd" v="generate code">
-        <Event_procedure_name v="AD1_OnCalibrationEnd" />
-        <Priority v="same as interrupt" />
-      </event>
+      <event name="OnEnd" v="don&amp;apos;t generate code" />
+      <event name="OnCalibrationEnd" v="don&amp;apos;t generate code" />
     </Events>
   </Bean>
   <Bean name="TU2" type="TimerUnit_LDD">
