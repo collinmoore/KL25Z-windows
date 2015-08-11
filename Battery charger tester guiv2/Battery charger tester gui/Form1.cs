@@ -335,7 +335,7 @@ namespace Battery_charger_tester_gui
             catch (TimeoutException)
             {
                 appendToRichTextBox1("Timed out reading duty cycle, READING NOW INVALID!\r");
-                dataLogger.writeToLogFile(0,"Timed out reading duty cycle, READING NOW INVALID!\r");
+                dataLogger.writeToLogFile(0,"Timed out reading duty cycle at "+DateTime.Now.ToString("hh:mm:ss tt")+", READING NOW INVALID!\r");
                 connectionManager.refreshSerial();
                 freshDutyCycle = false;
                 player.Play();
@@ -360,11 +360,13 @@ namespace Battery_charger_tester_gui
                     if (!freshADC)
                     {
                         appendToRichTextBox1("Failed to update ADC values.\r");
+                        dataLogger.writeToLogFile(0, "Failed to update ADC values at " + DateTime.Now.ToString("hh:mm:ss tt") + ".\r");
                         label3.Text = "ADC Error";
                     }
                     if (!freshDutyCycle)
                     {
                         appendToRichTextBox1("Failed to read duty cycle. \r");
+                        dataLogger.writeToLogFile(0, "Failed to read duty cycle at " + DateTime.Now.ToString("hh:mm:ss tt") + ". \r");
                         label4.Text = "Duty Cycle Read Error";
                         groupBox23.BackColor = Color.DarkRed;
                     }
@@ -374,7 +376,7 @@ namespace Battery_charger_tester_gui
             else
             {
                 appendToRichTextBox1("Failed to read ADC and duty cycle, are you connected?\r");
-                dataLogger.writeToLogFile(0, "Failed to refresh all data readings, possible disconnect.\r");
+                dataLogger.writeToLogFile(0, "Failed to refresh all data readings at " + DateTime.Now.ToString("hh:mm:ss tt") + ", possible disconnect.\r");
                 return false;
             }
         }
@@ -397,6 +399,7 @@ namespace Battery_charger_tester_gui
                     catch (TimeoutException)
                     {
                         appendToRichTextBox1("Timed out reading ADC channel " + i + ", moving on\r");
+                        dataLogger.writeToLogFile(0, "Timed out reading ADC channel " + i + " at " + DateTime.Now.ToString("hh:mm:ss tt") + "\r");
                         connectionManager.refreshSerial();
                         player.Play();
                     }
@@ -406,6 +409,7 @@ namespace Battery_charger_tester_gui
             catch (Exception ex)
             {
                 appendToRichTextBox1(ex.Message);
+                dataLogger.writeToLogFile(0, "Error " + ex.Message + " at " + DateTime.Now.ToString("hh:mm:ss tt") + "\r");
                 return false;
             }
         }
@@ -444,10 +448,10 @@ namespace Battery_charger_tester_gui
             decimal usbVoltageLowLimit = 4.40M;
             decimal usbVoltageUpperLimit = 5.25M;
             decimal usbOverVoltageThreshold = 5.50M;
-            decimal lowBattVoltage = 2.800M;
-            decimal midLowBatteryVoltage = 3.20M;
+            decimal lowBattVoltage = 2.750M;
+            decimal midLowBatteryVoltage = 3.00M;
             decimal upperSysVLIM = 4.40M;
-            decimal lowerSysVLIM = 3.40M;
+            decimal lowerSysVLIM = 3.00M;
             //decimal batteryTerminationVoltage = 4.20M;
 
             /**********************   current mins/maxes for coloring the boxes   ***********************/
@@ -459,7 +463,7 @@ namespace Battery_charger_tester_gui
 
             decimal sysUpperILIM = 3.00M;
 
-            int maxLowReadings = 20; // number of readings below the low battery threshold before turning off load
+            int maxLowReadings = 5; // number of readings below the low battery threshold before turning off load
 
             // IN voltage safe limits
             if ((inVoltage < inVoltageLimit) & (inVoltage > inVoltageOperatingLimit))

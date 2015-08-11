@@ -79,7 +79,7 @@ const uint16 ADC_COUNT_RX = 0x0B50U;
 const uint16 ADC_COUNT_TX = 0x4480U;
 
 /**************    control loop variables    ********************/
-uint16 error = 0x0002; // used to determine the difference between the current and desired current
+uint16 error = 0x0001; // used to determine the difference between the current and desired current
 
 bool firstDutySet = TRUE;
 bool oneSecondTick = FALSE;
