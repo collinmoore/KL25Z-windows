@@ -155,7 +155,7 @@ void UART_Init(void) {
  void UART_GetPacket(byte *packet){
 	uint8_t rx_counter=0;
 	for(rx_counter=0;rx_counter<3;rx_counter++){
-		 (void)RxBuf_Get(&packet[rx_counter]); // get the character in the buffer, store into address of the appropriate  
+		 (void)RxBuf_Get(&packet[rx_counter]); // get three bytes from the buffer
 	}
 	haveReceivedPacket=FALSE; // set the packet received back to 0
  }
@@ -180,8 +180,6 @@ void UART_Init(void) {
 			tx_packet[0] = (rx_packet[0]|rx_packet[1]); // send back command and the channel ORed
 			uint8_t offset = rx_packet[1]; // get the offset in words to start reading at, which is the ADC to read from.
 			uint8 * halfword_ptr = (byte *)&voltageValues[offset]; // pointer to point to bytes instead of words, starting at word offset
-			//tx_packet[2] = (uint8)(voltageValues[offset]&&0x00FF);
-			//tx_packet[1] = (uint8)(voltageValues[offset]>>8);
 			tx_packet[2] = *halfword_ptr; // byte-little-endian, LSB half sent first, must be read in and shifted into MSB half by PC
 			tx_packet[1] = *(++halfword_ptr); // LSB is tx_packet[2], MSB is tx_packet[1]
 		}
@@ -218,7 +216,7 @@ void UART_Init(void) {
 			&&(rx_packet[2]==RX_DATA2_HANDSHAKE)){
 		tx_packet[0] = TX_INSTRUCTION_HANDSHAKE;
 		tx_packet[1] = AD1_CHANNEL_COUNT; // send the number of ADC channels on the device
-		tx_packet[2] = TX_DATA2_HANDSHAKE; 
+		tx_packet[2] = TX_DATA2_HANDSHAKE;
 	}
 	else{
 		tx_packet[0] = TX_INSTRUCTION_UNKNOWN_COMMAND; // send error code for received unknown command
@@ -226,8 +224,5 @@ void UART_Init(void) {
 		tx_packet[2] = rx_packet[1]; // set the address to send
 	}
 	UART_SendPacket(tx_packet); // send the packet
-/*	tx_packet[0]=TX_INSTRUCTION_EOF; // set EOF character FF at end of any transmission
-	tx_packet[1]=TX_DATA1_EOF; // unused
-	tx_packet[2]=TX_DATA2_EOF; // unused 
-	UART_SendPacket(tx_packet); // send EOF packet to tell PC that we are done sending data */
 } /* end UART_ParseData */
+ 

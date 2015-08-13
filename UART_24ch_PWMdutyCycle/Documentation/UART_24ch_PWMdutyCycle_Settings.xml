@@ -967,7 +967,7 @@ PE_DEBUGHALT();
       </enumgroup>
       <enumgroup name="Counter restart" v="On-match">
         <Period_device v="LPTMR0_CMR" />
-        <Period v="1 Hz" />
+        <Period v="4 Hz" />
         <boolgroup name="Interrupt" v="Enabled">
           <Interrupt v="INT_LPTimer" />
           <Interrupt_priority v="low priority" />

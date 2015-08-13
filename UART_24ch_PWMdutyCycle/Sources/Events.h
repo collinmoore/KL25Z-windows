@@ -49,7 +49,7 @@
 extern "C" {
 #endif 
 
-extern bool oneSecondTick;
+extern bool hundredMSTick;
 
 /*
 ** ===================================================================

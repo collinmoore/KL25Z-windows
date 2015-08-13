@@ -80,7 +80,7 @@ void AS1_OnBlockReceived(LDD_TUserData *UserDataPtr)
 	(void)ptr->rxPutFct(ptr->rxChar); /* put received character into buffer */
 	(void)AS1_ReceiveBlock(ptr->handle, (LDD_TData *)&ptr->rxChar, sizeof(ptr->rxChar));
 	receivedBytes++; // increment number of bytes received each time we receive a byte
-	if(receivedBytes >= 3){ // if three bytes have been received, we have received a packet
+	if(receivedBytes > 2){ // if three bytes have been received, we have received a packet
 		receivedBytes=0; // reset receivedBytes counter
 		haveReceivedPacket = TRUE; // received a packet, let main know
 	}
@@ -135,7 +135,7 @@ void TU2_OnCounterRestart(LDD_TUserData *UserDataPtr)
 	  *  GPIO pin D7 is the high-current (transmit) load
 	  */
 		/* current must be measured to regulate with control loops */
-	oneSecondTick = TRUE;
+	hundredMSTick=TRUE;
 }
 
 /* END Events */

@@ -104,6 +104,7 @@ namespace Battery_charger_tester_gui
                     writeToLogFile(1, "Ch " + (i + 1) + ",");
                 }
                 writeToLogFile(1, "Duty cycle, Elapsed Milliseconds\r");
+                elapsedMillis = 0;
             }
             catch (System.IO.IOException ex)
             {

@@ -21,12 +21,13 @@ namespace Battery_charger_tester_gui
         // serial transfer variables
         Boolean serialTimeoutEnable = true; // use this to enable/disable timeouts on serial transfers
         private SerialPort serialPort;
-        private int[] baudValues = { 2400, 4800, 7200, 9600, 14400, 19200, 38400, 57600, 115200 }; // 128000 gives parameter incorrect for serial port
+        private int[] baudValues = { 115200/*, 57600, 38400, 19200, 14400, 9600, 7200, 4800, 2400*/ };
+        // {2400, 4800, 7200, 9600, 14400, 19200, 38400, 57600, 115200 }; // 128000 gives parameter incorrect for serial port
         private int serialTimeoutCounter = 0;
         private int serialTimeout = 200;  /*******************  ms to time out a serial transaction *****/
-        private const int maxSerialTimeout = 1000;
-        private const int minSerialTimeout = 200;
-        private const int connectTimeout = 20; // ms to time out the serial connection attempt
+        private const int maxSerialTimeout = 100;
+        private const int minSerialTimeout = 20;
+        private const int connectTimeout = 5; // ms to time out the serial connection attempt
         private Boolean serialDone = true;
         private TxPacket txPacket;
         private RxPacket rxPacket;
@@ -336,7 +337,7 @@ namespace Battery_charger_tester_gui
             {
                 if (serialTimeout < maxSerialTimeout)
                 {
-                    serialTimeout+=100;
+                    serialTimeout+=maxSerialTimeout;
                     serialDone = true;
                     readADC(channel);
                 }
@@ -440,7 +441,7 @@ namespace Battery_charger_tester_gui
             {
                 if (serialTimeout < maxSerialTimeout)
                 {
-                    serialTimeout+=100;
+                    serialTimeout+=10;
                     serialDone = true;
                     getDutyCycle();
                 }

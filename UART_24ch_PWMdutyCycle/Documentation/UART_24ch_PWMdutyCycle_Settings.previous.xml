@@ -392,7 +392,7 @@ PE_DEBUGHALT();
         <Parity v="None" />
         <Stop_bits v="1" />
         <Loop_mode v="Normal" />
-        <Baud_rate v="115200 baud" />
+        <Baud_rate v="9600 baud" />
         <Wakeup_condition v="Idle line wakeup" />
         <Stop_in_wait_mode v="no" />
         <Idle_line_mode v="Starts after start bit" />
@@ -789,17 +789,17 @@ PE_DEBUGHALT();
           </list>
           <boolgroup name="Static sample groups" v="Disabled" />
           <A_D_resolution v="16 bits" />
-          <Low_power_mode v="Enabled" />
+          <Low_power_mode v="Disabled" />
           <High_speed_conversion_mode v="Disabled" />
           <Asynchro_clock_output v="Disabled" />
           <Sample_time v="24 clock periods" />
           <Number_of_conversions v="1" />
-          <Conversion_time v="34.615385 &amp;#181;s" />
-          <ADC_clock v="1.31 MHz (762.939 ns)" />
-          <Single_conversion_time___Single_ended v="36.859 us" />
-          <Single_conversion_time___Differential v="43.725 us" />
-          <Additional_conversion_time___Single_ended v="34.332 us" />
-          <Additional_conversion_time___Differential v="41.198 us" />
+          <Conversion_time v="17.307692 &amp;#181;s" />
+          <ADC_clock v="2.621 MHz (381.47 ns)" />
+          <Single_conversion_time___Single_ended v="18.548 us" />
+          <Single_conversion_time___Differential v="21.982 us" />
+          <Additional_conversion_time___Single_ended v="17.166 us" />
+          <Additional_conversion_time___Differential v="20.599 us" />
           <Result_type v="unsigned 16 bits, right justified" />
           <boolgroup name="Trigger" v="Disabled" />
           <group name="Voltage reference">
@@ -902,8 +902,8 @@ PE_DEBUGHALT();
         </group>
       </list>
       <A_D_resolution v="16 bits" />
-      <Conversion_time v="34.615385 &amp;#181;s" />
-      <Low_power_mode v="Enabled" />
+      <Conversion_time v="17.307692 &amp;#181;s" />
+      <Low_power_mode v="Disabled" />
       <High_speed_conversion_mode v="Disabled" />
       <Asynchro_clock_output v="Disabled" />
       <Sample_time v="20 = long" />
@@ -967,7 +967,7 @@ PE_DEBUGHALT();
       </enumgroup>
       <enumgroup name="Counter restart" v="On-match">
         <Period_device v="LPTMR0_CMR" />
-        <Period v="1 Hz" />
+        <Period v="4 Hz" />
         <boolgroup name="Interrupt" v="Enabled">
           <Interrupt v="INT_LPTimer" />
           <Interrupt_priority v="low priority" />

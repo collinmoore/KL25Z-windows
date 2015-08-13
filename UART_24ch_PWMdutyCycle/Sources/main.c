@@ -55,34 +55,38 @@ const uint16 PWM_RATIO_IDLE = 0x32FFU;
 const uint16 PWM_RATIO_OFF = 0xFFFFU; 
 const uint16 PWM_RATIO_100MA = 0x32FFU;
 const uint16 PWM_RATIO_250MA = 0x2DFFU;
-const uint16 PWM_RATIO_500MA = 0x27FFU;
-const uint16 PWM_RATIO_750MA = 0x247FU;
+const uint16 PWM_RATIO_500MA = 0x225FU;
+const uint16 PWM_RATIO_750MA = 0x220FU;
 const uint16 PWM_RATIO_1000MA = 0x225FU;
-const uint16 PWM_RATIO_1500MA = 0x1DFFU;
-const uint16 PWM_RATIO_2000MA = 0x1BFFU;
+const uint16 PWM_RATIO_1500MA = 0x1FFFU;
+const uint16 PWM_RATIO_2000MA = 0x1DFFU;
 const uint16 PWM_RATIO_2500MA = 0x1A9FU;
 const uint16 PWM_RATIO_3000MA = 0x1907U;
 
 
-const uint16 ADC_COUNT_100MA = 0x04D0U;
-const uint16 ADC_COUNT_250MA = 0x0B50U;
-const uint16 ADC_COUNT_500MA = 0x1720U;
-const uint16 ADC_COUNT_750MA = 0x2200U;
-const uint16 ADC_COUNT_1000MA = 0x2DB0U;
-const uint16 ADC_COUNT_1500MA = 0x4480U;
-const uint16 ADC_COUNT_2000MA = 0x5AF0U;
-const uint16 ADC_COUNT_2500MA = 0x71B0U;
-const uint16 ADC_COUNT_3000MA = 0x8890U;
+const uint16 ADC_COUNT_100MA = 0x04D0;
+const uint16 ADC_COUNT_250MA = 0x0B50;
+const uint16 ADC_COUNT_500MA = 0x1610;//0x1720;
+const uint16 ADC_COUNT_750MA = 0x1FC0;
+const uint16 ADC_COUNT_1000MA = 0x3060;
+const uint16 ADC_COUNT_1500MA = 0x4300;
+const uint16 ADC_COUNT_2000MA = 0x5E00;//0x5AF0;
+const uint16 ADC_COUNT_2500MA = 0x7340;//0x71B0;
+const uint16 ADC_COUNT_3000MA = 0x8C00;//0x8890;
 
 const uint16 ADC_COUNT_IDLE = 0x0B50U;
 const uint16 ADC_COUNT_RX = 0x0B50U;
 const uint16 ADC_COUNT_TX = 0x4480U;
 
+
 /**************    control loop variables    ********************/
+//float voltsPerCount = 2.91/65535; // volts per count: multiply by count to get volts.
+//float scalingFactor = 1.941; // scaling factor for volts into amps
+uint16 plusMinus = 0x0002; // the values +/- on either side of target that are allowed
 uint16 error = 0x0001; // used to determine the difference between the current and desired current
 
 bool firstDutySet = TRUE;
-bool oneSecondTick = FALSE;
+bool hundredMSTick = FALSE;
 uint8 status = ERR_OK;
 uint8 dutyCycle = 0; // set duty cycle to 0 by default
 uint32 dutyCycleCounter = 0; // counter for where the duty cycle is
@@ -125,7 +129,7 @@ int main(void)
 	  if(haveReceivedPacket){
 		  // light to yellow for RX
 			GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
-			GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, off (active low LEDs)
+			GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
 			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 		  UART_ParseData();
 		  // turn off after transmit
@@ -133,7 +137,7 @@ int main(void)
 			GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
 			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 	  }
-	  if(oneSecondTick){
+	  if(hundredMSTick){
 		  // light to  teal for measurement
 			GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
 			GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
@@ -163,7 +167,7 @@ int main(void)
 				 * 	6 seconds rx mode
 				 * 	48 seconds standby circuit only
 				 */
-				if(dutyCycleCounter<0x06U){ // if less than 6 seconds, should be in TX mode
+				if(dutyCycleCounter<60){ // if less than 6 seconds, should be in TX mode
 					// white for most current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
@@ -173,13 +177,13 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_TX) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_TX+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_TX-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
-				if(dutyCycleCounter==0x06U) firstDutySet = TRUE;
-				else if(dutyCycleCounter<0x0CU){ // if more than 6 seconds but less than 12 seconds, should be in rx mode			
+				else if(dutyCycleCounter<120){ // if more than 6 seconds but less than 12 seconds, should be in rx mode			
+					if(dutyCycleCounter==60) firstDutySet = TRUE;
 					// purple for second highest load
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
@@ -189,14 +193,14 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_RX) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_RX+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_RX-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
-				if(dutyCycleCounter==0x0CU) firstDutySet = TRUE;
-				else if(dutyCycleCounter<0x3CU){ // if more than 12 seconds but less than 60 seconds, should be in standby mode
+				else if(dutyCycleCounter<600){ // if more than 12 seconds but less than 60 seconds, should be in standby mode
 					/* AS OF JUNE 1 2015, STANDBY MODE == RX MODE */
+					if(dutyCycleCounter==120) firstDutySet = TRUE;
 					// blue for least current draw
 					GPIOB_PSOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
@@ -206,8 +210,8 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_IDLE) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_IDLE+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_IDLE-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
@@ -222,7 +226,7 @@ int main(void)
 				 * 	3 seconds rx mode,
 				 * 	54 seconds standby circuit only
 				 */
-				if(dutyCycleCounter<0x03U){ // if less than 3 seconds, should be in TX mode
+				if(dutyCycleCounter<30){ // if less than 3 seconds, should be in TX mode
 					// RED for most current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
@@ -232,13 +236,13 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_TX) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_TX+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_TX-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
-				if(dutyCycleCounter==0x06U) firstDutySet = TRUE;
-				else if(dutyCycleCounter<0x06U){ // if more than 3 seconds but less than 6 seconds, should be in rx mode
+				else if(dutyCycleCounter<60){ // if more than 3 seconds but less than 6 seconds, should be in rx mode
+					if(dutyCycleCounter==30) firstDutySet = TRUE;
 					// purple for receive current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
@@ -248,13 +252,13 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_RX) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_RX+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_RX-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
-				if(dutyCycleCounter==0x3CU) firstDutySet = TRUE;
-				else if(dutyCycleCounter<0x3CU){ // if more than 6 seconds but less than 60 seconds, should be in standby mode
+				else if(dutyCycleCounter<600){ // if more than 6 seconds but less than 60 seconds, should be in standby mode
+					if(dutyCycleCounter==60) firstDutySet = TRUE;
 					/* AS OF JUNE 1 2015, STANDBY MODE == RX MODE */
 					// blue for least current draw
 					GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
@@ -265,8 +269,8 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_IDLE) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_IDLE+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_IDLE-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
@@ -281,7 +285,7 @@ int main(void)
 				 * 27 seconds rx mode
 				 * 30 seconds standby circuit only
 				 */
-				if(dutyCycleCounter<0x03U){ // if less than 3 seconds, should be in TX mode
+				if(dutyCycleCounter<30){ // if less than 3 seconds, should be in TX mode
 					// red for transmit current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
@@ -291,13 +295,13 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_TX) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_TX+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_TX-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
-				if(dutyCycleCounter==0x03U) firstDutySet = TRUE;
-				else if(dutyCycleCounter<0x1EU){ // if more than 3 seconds but less than 30 seconds, should be in rx mode
+				else if(dutyCycleCounter<300){ // if more than 3 seconds but less than 30 seconds, should be in rx mode
+					if(dutyCycleCounter==30) firstDutySet = TRUE;
 					// purple for receive current draw
 					GPIOB_PCOR = 0x00040000U; // set pin B18 red to low, on (active low LEDs)
 					GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
@@ -307,13 +311,13 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_RX) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_RX+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_RX-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
-				if(dutyCycleCounter==0x1EU) firstDutySet = TRUE;
-				else if(dutyCycleCounter<0x3CU){ // if more than 30 seconds but less than 60 seconds, should be in standby mode
+				else if(dutyCycleCounter<600){ // if more than 30 seconds but less than 60 seconds, should be in standby mode
+					if(dutyCycleCounter==300) firstDutySet = TRUE;
 					/* AS OF JUNE 1 2015, STANDBY MODE == RX MODE */
 					// blue for least current draw
 					GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
@@ -324,8 +328,8 @@ int main(void)
 						firstDutySet = FALSE;
 					}
 					else{
-						if(sixteenBitCurrentCount > ADC_COUNT_IDLE) pwmRatio+=error;
-						else pwmRatio-=error;
+						if(sixteenBitCurrentCount > ADC_COUNT_IDLE+plusMinus) pwmRatio+=error;
+						else if(sixteenBitCurrentCount < ADC_COUNT_IDLE-plusMinus) pwmRatio-=error;
 					}
 					dutyCycleCounter++;
 				}
@@ -345,8 +349,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_100MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_100MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_100MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x05U:
@@ -360,8 +364,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_250MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_250MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_250MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x06U:
@@ -375,8 +379,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_500MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_500MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_500MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x07U:
@@ -390,8 +394,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_750MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_750MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_750MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x08U:
@@ -405,9 +409,9 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_1000MA) pwmRatio+=error;
-					else pwmRatio-=error;
-					/*if(sixteenBitCurrentCount > ADC_COUNT_1000MA){
+					if(sixteenBitCurrentCount > ADC_COUNT_1000MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_1000MA-plusMinus) pwmRatio-=error;
+				/*	if(sixteenBitCurrentCount > ADC_COUNT_1000MA){
 						error = sixteenBitCurrentCount-ADC_COUNT_1000MA;
 						pwmRatio+=error;
 					}
@@ -428,8 +432,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_1500MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_1500MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_1500MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x0A:
@@ -443,8 +447,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_2000MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_2000MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_2000MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x0B:
@@ -458,8 +462,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_2500MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_2500MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_2500MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 			case 0x0C:
@@ -473,8 +477,8 @@ int main(void)
 					firstDutySet = FALSE;
 				}
 				else{
-					if(sixteenBitCurrentCount > ADC_COUNT_3000MA) pwmRatio+=error;
-					else pwmRatio-=error;
+					if(sixteenBitCurrentCount > ADC_COUNT_3000MA+plusMinus) pwmRatio+=error;
+					else if(sixteenBitCurrentCount < ADC_COUNT_3000MA-plusMinus) pwmRatio-=error;
 				}
 				break;
 				
@@ -490,6 +494,7 @@ int main(void)
 				break;
 		}
 		PWM1_SetRatio16(pwmRatio);
+		//hundredMSTick = FALSE;
 	  }
   }
 
