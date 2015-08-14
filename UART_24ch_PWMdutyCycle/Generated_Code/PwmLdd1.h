@@ -6,7 +6,7 @@
 **     Component   : PWM_LDD
 **     Version     : Component 01.013, Driver 01.03, CPU db: 3.00.000
 **     Compiler    : GNU C Compiler
-**     Date/Time   : 2015-07-21, 10:52, # CodeGen: 2
+**     Date/Time   : 2015-08-14, 16:06, # CodeGen: 58
 **     Abstract    :
 **          This component implements a pulse-width modulation generator
 **          that generates signal with variable duty and fixed cycle.
@@ -43,8 +43,6 @@
 **     Contents    :
 **         Init       - LDD_TDeviceData* PwmLdd1_Init(LDD_TUserData *UserDataPtr);
 **         SetRatio16 - LDD_TError PwmLdd1_SetRatio16(LDD_TDeviceData *DeviceDataPtr, uint16_t Ratio);
-**         SetDutyUS  - LDD_TError PwmLdd1_SetDutyUS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time);
-**         SetDutyMS  - LDD_TError PwmLdd1_SetDutyMS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time);
 **
 **     Copyright : 1997 - 2014 Freescale Semiconductor, Inc. 
 **     All Rights Reserved.
@@ -125,8 +123,6 @@ extern "C" {
 /* Methods configuration constants - generated for all enabled component's methods */
 #define PwmLdd1_Init_METHOD_ENABLED    /*!< Init method of the component PwmLdd1 is enabled (generated) */
 #define PwmLdd1_SetRatio16_METHOD_ENABLED /*!< SetRatio16 method of the component PwmLdd1 is enabled (generated) */
-#define PwmLdd1_SetDutyUS_METHOD_ENABLED /*!< SetDutyUS method of the component PwmLdd1 is enabled (generated) */
-#define PwmLdd1_SetDutyMS_METHOD_ENABLED /*!< SetDutyMS method of the component PwmLdd1 is enabled (generated) */
 
 /* Events configuration constants - generated for all enabled component's events */
 
@@ -185,60 +181,6 @@ LDD_TDeviceData* PwmLdd1_Init(LDD_TUserData *UserDataPtr);
 */
 /* ===================================================================*/
 LDD_TError PwmLdd1_SetRatio16(LDD_TDeviceData *DeviceDataPtr, uint16_t Ratio);
-
-/*
-** ===================================================================
-**     Method      :  PwmLdd1_SetDutyUS (component PWM_LDD)
-*/
-/*!
-**     @brief
-**         This method sets the new duty value of the output signal.
-**         The duty is expressed in microseconds as a 16-bit unsigned
-**         integer number. The method is available only if it is not
-**         selected list of predefined values in [Starting pulse width]
-**         property.
-**     @param
-**         DeviceDataPtr   - Device data structure
-**                           pointer returned by [Init] method.
-**     @param
-**         Time            - Duty to set [in microseconds]
-**     @return
-**                         - Error code, possible codes:
-**                           ERR_OK - OK
-**                           ERR_SPEED - The component does not work in
-**                           the active clock configuration
-**                           ERR_MATH - Overflow during evaluation
-**                           ERR_PARAM_RANGE - Parameter out of range
-*/
-/* ===================================================================*/
-LDD_TError PwmLdd1_SetDutyUS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time);
-
-/*
-** ===================================================================
-**     Method      :  PwmLdd1_SetDutyMS (component PWM_LDD)
-*/
-/*!
-**     @brief
-**         This method sets the new duty value of the output signal.
-**         The duty is expressed in milliseconds as a 16-bit unsigned
-**         integer number. The method is available only if it is not
-**         selected list of predefined values in [Starting pulse width]
-**         property.
-**     @param
-**         DeviceDataPtr   - Device data structure
-**                           pointer returned by [Init] method.
-**     @param
-**         Time            - Duty to set [in milliseconds]
-**     @return
-**                         - Error code, possible codes:
-**                           ERR_OK - OK
-**                           ERR_SPEED - The component does not work in
-**                           the active clock configuration
-**                           ERR_MATH - Overflow during evaluation
-**                           ERR_PARAM_RANGE - Parameter out of range
-*/
-/* ===================================================================*/
-LDD_TError PwmLdd1_SetDutyMS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time);
 
 /* END PwmLdd1. */
 

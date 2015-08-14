@@ -6,7 +6,7 @@
 **     Component   : ADC
 **     Version     : Component 01.697, Driver 01.00, CPU db: 3.00.000
 **     Compiler    : GNU C Compiler
-**     Date/Time   : 2015-08-05, 16:15, # CodeGen: 36
+**     Date/Time   : 2015-08-14, 16:06, # CodeGen: 58
 **     Abstract    :
 **         This device "ADC" implements an A/D converter,
 **         its control methods and interrupt/event handling procedure.
@@ -142,7 +142,7 @@ extern "C" {
 
 
 #define AD1_SAMPLE_GROUP_SIZE 8U
-static void AD1_MainMeasure(void);
+//static void AD1_MainMeasure(void);
 /*
 ** ===================================================================
 **     Method      :  MainMeasure (component ADC)

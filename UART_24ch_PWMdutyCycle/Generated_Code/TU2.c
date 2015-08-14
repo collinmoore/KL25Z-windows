@@ -6,7 +6,7 @@
 **     Component   : TimerUnit_LDD
 **     Version     : Component 01.164, Driver 01.11, CPU db: 3.00.000
 **     Compiler    : GNU C Compiler
-**     Date/Time   : 2015-08-12, 11:27, # CodeGen: 49
+**     Date/Time   : 2015-08-14, 16:02, # CodeGen: 57
 **     Abstract    :
 **          This TimerUnit component provides a low level API for unified hardware access across
 **          various timer devices using the Prescaler-Counter-Compare-Capture timer structure.
@@ -21,7 +21,7 @@
 **            Counter frequency                            : 128 Hz
 **          Counter restart                                : On-match
 **            Period device                                : LPTMR0_CMR
-**            Period                                       : 4 Hz
+**            Period                                       : 1 Hz
 **            Interrupt                                    : Enabled
 **              Interrupt                                  : INT_LPTimer
 **              Interrupt priority                         : low priority
@@ -158,8 +158,8 @@ LDD_TDeviceData* TU2_Init(LDD_TUserData *UserDataPtr)
   SIM_SCGC5 |= SIM_SCGC5_LPTMR_MASK;
   /* LPTMR0_CSR: ??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,TCF=1,TIE=0,TPS=0,TPP=0,TFC=0,TMS=0,TEN=0 */
   LPTMR0_CSR = (LPTMR_CSR_TCF_MASK | LPTMR_CSR_TPS(0x00)); /* Clear control register */
-  /* LPTMR0_CMR: ??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,COMPARE=0x1F */
-  LPTMR0_CMR = LPTMR_CMR_COMPARE(0x1F); /* Set up compare register */
+  /* LPTMR0_CMR: ??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,COMPARE=0x7F */
+  LPTMR0_CMR = LPTMR_CMR_COMPARE(0x7F); /* Set up compare register */
   /* LPTMR0_PSR: ??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,??=0,PRESCALE=7,PBYP=0,PCS=0 */
   LPTMR0_PSR = (LPTMR_PSR_PRESCALE(0x07) | LPTMR_PSR_PCS(0x00)); /* Set up prescaler register */
   /* NVIC_IPR7: PRI_28=0x80 */

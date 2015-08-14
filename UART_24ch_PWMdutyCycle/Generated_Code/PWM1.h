@@ -6,7 +6,7 @@
 **     Component   : PWM
 **     Version     : Component 02.241, Driver 01.01, CPU db: 3.00.000
 **     Compiler    : GNU C Compiler
-**     Date/Time   : 2015-07-21, 10:52, # CodeGen: 2
+**     Date/Time   : 2015-08-14, 16:06, # CodeGen: 58
 **     Abstract    :
 **         This component implements a pulse-width modulation generator
 **         that generates signal with variable duty and fixed cycle. 
@@ -50,8 +50,6 @@
 **
 **     Contents    :
 **         SetRatio16 - byte PWM1_SetRatio16(word Ratio);
-**         SetDutyUS  - byte PWM1_SetDutyUS(word Time);
-**         SetDutyMS  - byte PWM1_SetDutyMS(word Time);
 **
 **     Copyright : 1997 - 2014 Freescale Semiconductor, Inc. 
 **     All Rights Reserved.
@@ -143,50 +141,6 @@ extern "C" {
 ** ===================================================================
 */
 #define PWM1_SetRatio16(Ratio) (PwmLdd1_SetRatio16(PwmLdd1_DeviceData, Ratio))
-
-/*
-** ===================================================================
-**     Method      :  PWM1_SetDutyUS (component PWM)
-**     Description :
-**         This method sets the new duty value of the output signal.
-**         The duty is expressed in microseconds as a 16-bit
-**         unsigned integer number.
-**     Parameters  :
-**         NAME            - DESCRIPTION
-**         Time            - Duty to set [in microseconds]
-**                      (0 to 1 us in high speed mode)
-**     Returns     :
-**         ---             - Error code, possible codes:
-**                           ERR_OK - OK
-**                           ERR_SPEED - This device does not work in
-**                           the active speed mode
-**                           ERR_MATH - Overflow during evaluation
-**                           ERR_RANGE - Parameter out of range
-** ===================================================================
-*/
-#define PWM1_SetDutyUS(Time) (PwmLdd1_SetDutyUS(PwmLdd1_DeviceData, Time))
-
-/*
-** ===================================================================
-**     Method      :  PWM1_SetDutyMS (component PWM)
-**     Description :
-**         This method sets the new duty value of the output signal.
-**         The duty is expressed in milliseconds as a 16-bit
-**         unsigned integer number.
-**     Parameters  :
-**         NAME            - DESCRIPTION
-**         Time            - Duty to set [in milliseconds]
-**                      (0 to --- ms in high speed mode)
-**     Returns     :
-**         ---             - Error code, possible codes:
-**                           ERR_OK - OK
-**                           ERR_SPEED - This device does not work in
-**                           the active speed mode
-**                           ERR_MATH - Overflow during evaluation
-**                           ERR_RANGE - Parameter out of range
-** ===================================================================
-*/
-#define PWM1_SetDutyMS(Time) (PwmLdd1_SetDutyMS(PwmLdd1_DeviceData, Time))
 
 /* END PWM1. */
 

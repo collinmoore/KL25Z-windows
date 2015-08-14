@@ -99,7 +99,7 @@ int main(void)
 {
   /* Write your local variable definition here */
 
-
+	uint16 sixteenBitCurrentCount = 0x0000U;
   /*** Processor Expert internal initialization. DON'T REMOVE THIS CODE!!! ***/
   PE_low_level_init();
   /*** End of Processor Expert internal initialization.                    ***/
@@ -138,19 +138,6 @@ int main(void)
 			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 	  }
 	  if(hundredMSTick){
-		  // light to  teal for measurement
-			GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
-			GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
-			GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
-		  	AD1_Measure(1); // measure from the ADC and wait for values
-		  	status=AD1_GetValue16(voltageValues); // store all twelve ADC counts into the voltageValues array
-		  	uint8 * halfword_ptr =(uint8*)&voltageValues[7]; // temporary pointer to get out data from the little-endian bytes in the word
-		  	uint16 sixteenBitCurrentCount = *halfword_ptr; 
-		  	sixteenBitCurrentCount |= (*(++halfword_ptr) <<8); // swap bytes from little to big endian
-		  // turn off lights after measurement
-			GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
-			GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
-			GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
 		  switch(dutyCycle){
 			case 0x00U:
 				/* 0x00 is off, both circuits off all the time
@@ -494,8 +481,21 @@ int main(void)
 				break;
 		}
 		PWM1_SetRatio16(pwmRatio);
-		//hundredMSTick = FALSE;
+		hundredMSTick = FALSE;
 	  }
+	  // light to  teal for measurement
+		GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
+		GPIOB_PCOR = 0x00080000U; // set pin B19 green to low, on (active low LEDs)
+		GPIOD_PCOR = 0x00000002U; // set pin D1 blue to low, on (active low LEDs)
+	  	AD1_Measure(1); // measure from the ADC and wait for values
+	  	status=AD1_GetValue16(voltageValues); // store all twelve ADC counts into the voltageValues array
+	  	uint8 * halfword_ptr =(uint8*)&voltageValues[7]; // temporary pointer to get out data from the little-endian bytes in the word
+	  	sixteenBitCurrentCount = *halfword_ptr; 
+	  	sixteenBitCurrentCount |= (*(++halfword_ptr) <<8); // swap bytes from little to big endian
+	  // turn off lights after measurement
+		GPIOB_PSOR = 0x00040000U; // set pin B18 red to high, off (active low LEDs)
+		GPIOB_PSOR = 0x00080000U; // set pin B19 green to high, off (active low LEDs)
+		GPIOD_PSOR = 0x00000002U; // set pin D1 blue to high, off (active low LEDs)
   }
 
   /*** Don't write any code pass this line, or it will be deleted during code generation. ***/

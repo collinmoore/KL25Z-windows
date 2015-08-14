@@ -6,7 +6,7 @@
 **     Component   : PWM_LDD
 **     Version     : Component 01.013, Driver 01.03, CPU db: 3.00.000
 **     Compiler    : GNU C Compiler
-**     Date/Time   : 2015-07-21, 10:52, # CodeGen: 2
+**     Date/Time   : 2015-08-14, 16:06, # CodeGen: 58
 **     Abstract    :
 **          This component implements a pulse-width modulation generator
 **          that generates signal with variable duty and fixed cycle.
@@ -43,8 +43,6 @@
 **     Contents    :
 **         Init       - LDD_TDeviceData* PwmLdd1_Init(LDD_TUserData *UserDataPtr);
 **         SetRatio16 - LDD_TError PwmLdd1_SetRatio16(LDD_TDeviceData *DeviceDataPtr, uint16_t Ratio);
-**         SetDutyUS  - LDD_TError PwmLdd1_SetDutyUS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time);
-**         SetDutyMS  - LDD_TError PwmLdd1_SetDutyMS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time);
 **
 **     Copyright : 1997 - 2014 Freescale Semiconductor, Inc. 
 **     All Rights Reserved.
@@ -195,90 +193,6 @@ LDD_TError PwmLdd1_SetRatio16(LDD_TDeviceData *DeviceDataPtr, uint16_t Ratio)
   DeviceDataPrv->RatioStore = Ratio;   /* Store new value of the ratio */
   SetRatio(DeviceDataPtr);
   return ERR_OK;
-}
-
-/*
-** ===================================================================
-**     Method      :  PwmLdd1_SetDutyUS (component PWM_LDD)
-*/
-/*!
-**     @brief
-**         This method sets the new duty value of the output signal.
-**         The duty is expressed in microseconds as a 16-bit unsigned
-**         integer number. The method is available only if it is not
-**         selected list of predefined values in [Starting pulse width]
-**         property.
-**     @param
-**         DeviceDataPtr   - Device data structure
-**                           pointer returned by [Init] method.
-**     @param
-**         Time            - Duty to set [in microseconds]
-**     @return
-**                         - Error code, possible codes:
-**                           ERR_OK - OK
-**                           ERR_SPEED - The component does not work in
-**                           the active clock configuration
-**                           ERR_MATH - Overflow during evaluation
-**                           ERR_PARAM_RANGE - Parameter out of range
-*/
-/* ===================================================================*/
-LDD_TError PwmLdd1_SetDutyUS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time)
-{
-  PwmLdd1_TDeviceData *DeviceDataPrv = (PwmLdd1_TDeviceData *)DeviceDataPtr;
-  LDD_TimerUnit_Tfloat rtval;          /* Result of multiplication */
-
-  /* Time test - this test can be disabled by setting the "Ignore range checking"
-     property to the "yes" value in the "Configuration inspector" */
-  if (Time > 0x01U) {                  /* Is the given value out of range? */
-    return ERR_PARAM_RANGE;            /* If yes then error */
-  }
-  rtval = Time * 65447.12070092379F;   /* Multiply given value and actual clock configuration coefficient */
-  if (rtval > 0xFFFFUL) {              /* Is the result greater than 65535 ? */
-    DeviceDataPrv->RatioStore = 0xFFFFU; /* If yes then use maximal possible value */
-  }
-  else {
-    DeviceDataPrv->RatioStore = (uint16_t)rtval;
-  }
-  SetRatio(DeviceDataPtr);             /* Calculate and set up new appropriate values of the duty register */
-  return ERR_OK;                       /* OK */
-}
-
-/*
-** ===================================================================
-**     Method      :  PwmLdd1_SetDutyMS (component PWM_LDD)
-*/
-/*!
-**     @brief
-**         This method sets the new duty value of the output signal.
-**         The duty is expressed in milliseconds as a 16-bit unsigned
-**         integer number. The method is available only if it is not
-**         selected list of predefined values in [Starting pulse width]
-**         property.
-**     @param
-**         DeviceDataPtr   - Device data structure
-**                           pointer returned by [Init] method.
-**     @param
-**         Time            - Duty to set [in milliseconds]
-**     @return
-**                         - Error code, possible codes:
-**                           ERR_OK - OK
-**                           ERR_SPEED - The component does not work in
-**                           the active clock configuration
-**                           ERR_MATH - Overflow during evaluation
-**                           ERR_PARAM_RANGE - Parameter out of range
-*/
-/* ===================================================================*/
-LDD_TError PwmLdd1_SetDutyMS(LDD_TDeviceData *DeviceDataPtr, uint16_t Time)
-{
-  PwmLdd1_TDeviceData *DeviceDataPrv = (PwmLdd1_TDeviceData *)DeviceDataPtr;
-  LDD_TimerUnit_Tfloat rtval;          /* Result of multiplication */
-
-  /* Period is too little. Method 'SetDutyMS' will return only error code. */
-  (void)Time;                          /* Parameter is not used, suppress unused argument warning */
-  (void)DeviceDataPrv;                 /* Variable is not used, suppress unused argument warning */
-  rtval = 0;                           /* Suppress variable used before set warning */
-  (void)rtval;                         /* Variable is not used, suppress unused argument warning */
-  return ERR_MATH;                     /* Calculation error */
 }
 
 /*
