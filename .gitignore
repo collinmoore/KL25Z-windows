@@ -4,6 +4,8 @@
 RemoteLaunch/*
 RemoteSystemsTempFiles/*
 .metadata/*
+UART_24ch_PWMdutyCycle/FLASH/*
+ProjectInfo.xml
 *.d
 *.o
 *.args
